@@ -1,7 +1,15 @@
-export const createUserRankTemplate = () => {
+export const createUserRankTemplate = (rank) => {
+  let userRank;
+  if (rank >= 1 && rank <= 10) {
+    userRank = `novice`;
+  } else if (rank > 10 && rank <= 20) {
+    userRank = `fan`;
+  } else if (rank > 20) {
+    userRank = `movie buff`;
+  }
   return (
     `<section class="header__profile profile">
-    <p class="profile__rating">Movie Buff</p>
+    <p class="profile__rating">${userRank}</p>
     <img class="profile__avatar" src="images/bitmap@2x.png" alt="Avatar" width="35" height="35"></img>
   </section>`
   );
