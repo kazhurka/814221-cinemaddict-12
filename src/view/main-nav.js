@@ -1,3 +1,7 @@
+import {
+  createElement
+} from "../utils.js";
+
 export const createMainNavTemplate = (quantityOfWatchedFilms) => {
   return (
     `<nav class="main-navigation">
@@ -10,5 +14,27 @@ export const createMainNavTemplate = (quantityOfWatchedFilms) => {
   <a href="#stats" class="main-navigation__additional">Stats</a>
 </nav>`
   );
-
 };
+
+export default class MainNavView {
+  constructor(rank) {
+    this._element = null;
+    this._rank = rank;
+  }
+
+  getTemplate() {
+    return createMainNavTemplate(this._rank);
+  }
+
+  getElement() {
+    if (!this._element) {
+      this._element = createElement(this.getTemplate());
+    }
+
+    return this._element;
+  }
+
+  removeElement() {
+    this._element = null;
+  }
+}

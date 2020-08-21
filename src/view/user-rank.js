@@ -1,4 +1,9 @@
-export const createUserRankTemplate = (rank) => {
+import {
+  createElement
+} from "../utils.js";
+
+const createUserRankTemplate = (rank) => {
+
   let userRank;
   if (rank >= 1 && rank <= 10) {
     userRank = `novice`;
@@ -14,3 +19,27 @@ export const createUserRankTemplate = (rank) => {
   </section>`
   );
 };
+
+export default class UserRank {
+
+  constructor(rank) {
+    this._element = null;
+    this._rank = rank;
+  }
+
+  getTemplate() {
+    return createUserRankTemplate(this._rank);
+  }
+
+  getElement() {
+    if (!this._element) {
+      this._element = createElement(this.getTemplate());
+    }
+
+    return this._element;
+  }
+
+  removeElement() {
+    this._element = null;
+  }
+}
