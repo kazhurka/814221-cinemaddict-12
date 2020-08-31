@@ -7,6 +7,7 @@ import MovieCard from "./view/movie-card";
 import MovieInfo from "./view/movie-info";
 import MoviesContainer from "./view/movies-container";
 import MoviesList from "./view/movies-list";
+import NoMovies from "./view/no-movies";
 
 import {
   generateCard
@@ -29,7 +30,7 @@ const generateCards = (quantity) => {
 };
 
 
-const cards = generateCards(20);
+const cards = generateCards(0);
 let sortedCards = cards;
 let rank = generateRank();
 
@@ -38,8 +39,8 @@ const siteHeaderElement = document.querySelector(`.header`);
 renderElement(siteHeaderElement, new UserRank(rank).getElement(), BEFORE_END);
 
 const siteMainElement = document.querySelector(`.main`);
-renderElement(siteMainElement, new Sort().getElement(), BEFORE_END);
 renderElement(siteMainElement, new MainNavView(rank).getElement(), BEFORE_END);
+renderElement(siteMainElement, new Sort().getElement(), BEFORE_END);
 renderElement(siteMainElement, new MoviesList().getElement(), BEFORE_END);
 
 const siteMoviesListElement = document.querySelector(`.films-list`);
@@ -74,6 +75,9 @@ const openPopupCardHandler = (evt) => {
 
 const siteMoviesContainerElement = siteMoviesListElement.querySelector(`.films-list__container`);
 const renderCards = (cardsData) => {
+  if (cardsData.length === 0) {
+    renderElement(siteMoviesContainerElement, new NoMovies().getElement(), BEFORE_END);
+  }
   for (let i = 0; i < cardsData.length; i++) {
     let cardEl = new MovieCard(cardsData[i]).getElement();
     renderElement(siteMoviesContainerElement, cardEl, BEFORE_END);
