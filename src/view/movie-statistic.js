@@ -1,6 +1,4 @@
-import {
-  createElement
-} from "../utils.js";
+import AbstractView from "./abstract.js";
 
 const createMovieStatisticsTemplate = (numberOfCards) => {
   return (
@@ -8,9 +6,9 @@ const createMovieStatisticsTemplate = (numberOfCards) => {
   );
 };
 
-export default class MovieStatistics {
+export default class MovieStatistics extends AbstractView {
   constructor(quantity) {
-    this._element = null;
+    super();
     this._quantity = quantity;
   }
 
@@ -18,15 +16,4 @@ export default class MovieStatistics {
     return createMovieStatisticsTemplate(this._quantity);
   }
 
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-    }
-
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
-  }
 }

@@ -1,7 +1,8 @@
 import {
-  createElement,
-  renderElement
-} from "../utils.js";
+  render
+} from "./utils.js/render.js";
+
+import AbstractView from "./abstract.js";
 
 import Comment from "./comment";
 import {
@@ -162,9 +163,9 @@ const createMovieInfoTemplate = (card) => {
   );
 };
 
-export default class MovieInfo {
+export default class MovieInfo extends AbstractView {
   constructor(card) {
-    this._element = null;
+    super();
     this._card = card;
   }
 
@@ -174,19 +175,7 @@ export default class MovieInfo {
 
   renderComments() {
     for (let i = 0; i < this._card.comments.length; i++) {
-      renderElement(this._element.querySelector(`.film-details__comments-list`), new Comment(this._card.comments[i]).getElement(), AFTER_BEGIN);
+      render(this._element.querySelector(`.film-details__comments-list`), new Comment(this._card.comments[i]).getElement(), AFTER_BEGIN);
     }
-  }
-  getElement() {
-    if (!this._element) {
-      this._element = createElement(this.getTemplate());
-      this.renderComments();
-    }
-
-    return this._element;
-  }
-
-  removeElement() {
-    this._element = null;
   }
 }
