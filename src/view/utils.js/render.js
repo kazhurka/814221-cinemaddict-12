@@ -1,3 +1,5 @@
+import AbstractView from "../abstract.js";
+
 export const RenderPosition = {
   AFTERBEGIN: `afterbegin`,
   BEFOREEND: `beforeend`
@@ -7,7 +9,15 @@ export const renderTemplate = (container, template, place) => {
   container.insertAdjacentHTML(place, template);
 };
 
-export const renderElement = (container, element, place) => {
+export const render = (container, element, place) => {
+
+  if (container instanceof AbstractView) {
+    container = container.getElement();
+  }
+
+  if (element instanceof AbstractView) {
+    element = element.getElement();
+  }
   switch (place) {
     case RenderPosition.AFTERBEGIN:
       container.prepend(element);
@@ -23,4 +33,14 @@ export const createElement = (template) => {
   newElement.innerHTML = template;
 
   return newElement.firstChild;
+};
+
+
+export const remove = (component) => {
+  if (!(component instanceof AbstractView)) {
+    throw new Error(`Can remove only components`);
+  }
+
+  component.getElement().remove();
+  component.removeElement();
 };
