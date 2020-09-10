@@ -9,7 +9,15 @@ import {
 } from "../main";
 import {
   render
-} from "../view/utils.js/render";
+} from "../view/utils/render";
+import Sort from "../view/sort";
+import {
+  SortTypes
+} from "../view/const";
+import {
+  sortCardsByDate,
+  sortCardsByRate
+} from "../view/utils/common";
 
 
 export default class MovieList {
@@ -18,12 +26,18 @@ export default class MovieList {
     this._moviesSectionComponent = new MoviesSection();
     this._moviesContainerComponent = new MoviesContainer();
     this._showMoreButtonComponent = new ShowMoreButton();
+    this._sortComponent = new Sort();
     this._MOVIES_CARD_COUNT = 5;
+    this._currentSortType = SortTypes.DEFAULT;
     this._handleShowMoreButtonClick = this._handleShowMoreButtonClick.bind(this);
+    this._handleSortTypeChange = this._handleSortTypeChange.bind(this);
+
   }
 
-  init(sortedCards) {
-    this._movieCards = sortedCards.slice();
+  init(cards) {
+    this._renderSort();
+    this._movieCards = cards.slice();
+    this._sourcedMovieCards = cards.slice();
     render(this._mainContainer, this._moviesSectionComponent, BEFORE_END);
     render(this._moviesSectionComponent, this._moviesContainerComponent, BEFORE_END);
     this._renderShowMoreButton();
@@ -33,7 +47,7 @@ export default class MovieList {
   _renderCards(cardsData) {
     const removePopup = () => {
       document.querySelector(`.film-details__close`).removeEventListener(`click`, byClickClosePopupHandler);
-      document.querySelector(`.film-details__close`).removeEventListener(`keydown`, byKeyClosePopupHandler);
+      document.removeEventListener(`keydown`, byKeyClosePopupHandler);
       document.querySelector(`.film-details`).remove();
     };
 
@@ -86,4 +100,35 @@ export default class MovieList {
       document.querySelector(`.films-list__show-more`).style.display = `none`;
     }
   }
+
+  _sortMovies(sortType) {
+    switch (sortType) {
+      case SortTypes.BY_DATE:
+        this._movieCards.sort(sortCardsByDate);
+        break;
+      case SortTypes.BY_RATE:
+        this._movieCards.sort(sortCardsByRate);
+        break;
+      default:
+        this._movieCards = this._sourcedMovieCards.slice();
+    }
+    this._currentSortType = sortType;
+  }
+
+  _handleSortTypeChange(sortType) {
+    if (this._currentSortType === sortType) {
+      return;
+    }
+    this._sortComponent.setActiveSortButton(sortType);
+    this._sortMovies(sortType);
+    this._clearCards();
+    this._renderCards(this._movieCards.slice(0, this._MOVIES_CARD_COUNT));
+    this._showMoreButtonComponent.activate();
+  }
+  _renderSort() {
+    render(this._mainContainer, this._sortComponent, BEFORE_END);
+    this._sortComponent.setSortTypeChangeHandler(this._handleSortTypeChange);
+  }
+
+
 }

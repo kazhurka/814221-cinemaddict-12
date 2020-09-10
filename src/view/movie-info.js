@@ -1,6 +1,6 @@
 import {
   render
-} from "./utils.js/render.js";
+} from "./utils/render.js";
 
 import AbstractView from "./abstract.js";
 
@@ -167,6 +167,8 @@ export default class MovieInfo extends AbstractView {
   constructor(card) {
     super();
     this._card = card;
+    this._element = this.getElement();
+    this.renderComments();
   }
 
   getTemplate() {
