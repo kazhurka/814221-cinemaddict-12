@@ -176,10 +176,13 @@ const generateComments = () => {
   return comments;
 };
 
+const generateId = () => Date.now() + parseInt(Math.random() * 10000, 10);
+
 export const generateCard = () => {
   let title = generateTitle();
   let commentsData = generateComments();
   return {
+    id: generateId(),
     cover: generatePoster(),
     name: title,
     originalName: title,

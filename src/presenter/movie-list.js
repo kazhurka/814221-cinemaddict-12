@@ -1,9 +1,9 @@
 import ShowMoreButton from "../view/show-more-button";
-import MovieCard from "../view/movie-card";
+import CardPresenter from "./card";
 import MoviesContainer from "../view/movies-container";
 import MoviesSection from "../view/movies-section.js";
 import NoMovies from "../view/no-movies";
-import MovieInfo from "../view/movie-info";
+
 import {
   BEFORE_END
 } from "../main";
@@ -12,11 +12,13 @@ import {
 } from "../view/utils/render";
 import Sort from "../view/sort";
 import {
-  SortTypes
+  SortTypes,
+  MOVIES_CARD_COUNT
 } from "../view/const";
 import {
   sortCardsByDate,
-  sortCardsByRate
+  sortCardsByRate,
+  updateItem
 } from "../view/utils/common";
 
 
@@ -27,10 +29,14 @@ export default class MovieList {
     this._moviesContainerComponent = new MoviesContainer();
     this._showMoreButtonComponent = new ShowMoreButton();
     this._sortComponent = new Sort();
-    this._MOVIES_CARD_COUNT = 5;
+    this._MOVIES_CARD_COUNT = MOVIES_CARD_COUNT;
     this._currentSortType = SortTypes.DEFAULT;
     this._handleShowMoreButtonClick = this._handleShowMoreButtonClick.bind(this);
     this._handleSortTypeChange = this._handleSortTypeChange.bind(this);
+    this._handlePopup = this._handlePopup.bind(this);
+    this._handleCardChange = this._handleCardChange.bind(this);
+    this._handleChangeMode = this._handleChangeMode.bind(this);
+    this._cardPresenter = {};
 
   }
 
@@ -41,48 +47,26 @@ export default class MovieList {
     render(this._mainContainer, this._moviesSectionComponent, BEFORE_END);
     render(this._moviesSectionComponent, this._moviesContainerComponent, BEFORE_END);
     this._renderShowMoreButton();
-    this._renderCards(this._movieCards.slice(0, this._MOVIES_CARD_COUNT));
+    this._renderCards(0, this._MOVIES_CARD_COUNT);
   }
 
-  _renderCards(cardsData) {
-    const removePopup = () => {
-      document.querySelector(`.film-details__close`).removeEventListener(`click`, byClickClosePopupHandler);
-      document.removeEventListener(`keydown`, byKeyClosePopupHandler);
-      document.querySelector(`.film-details`).remove();
-    };
+  _renderCard(card) {
+    const cardPresenter = new CardPresenter(this._moviesContainerComponent, this._handlePopup, this._handleCardChange, this._handleChangeMode);
+    cardPresenter.init(card);
+    this._cardPresenter[card.id] = cardPresenter;
+  }
 
-    const byClickClosePopupHandler = () => {
-      removePopup();
-    };
-
-    const byKeyClosePopupHandler = (evt) => {
-      if (evt.key === `Escape`) {
-        removePopup();
-      }
-    };
-
-    const openPopupCardHandler = (evt) => {
-      const bodyElement = document.querySelector(`body`);
-      const cardEls = Array.from(document.querySelectorAll(`.film-card`));
-      let index = cardEls.indexOf(evt.target.parentNode);
-      let popup = new MovieInfo(this._movieCards[index]).getElement();
-      bodyElement.appendChild(popup);
-      popup.querySelector(`.film-details__close`).addEventListener(`click`, byClickClosePopupHandler);
-      document.addEventListener(`keydown`, byKeyClosePopupHandler);
-    };
-
-    if (cardsData.length === 0) {
+  _renderCards(from, to) {
+    let cardsData = this._movieCards.slice(from, to);
+    for (let i = 0; i < cardsData.length; i++) {
+      this._renderCard(cardsData[i]);
+    }
+  }
+  _renderNoCards() {
+    if (this._movieCards.length === 0) {
       render(this._moviesContainerComponent, new NoMovies(), BEFORE_END);
     }
-    for (let i = 0; i < cardsData.length; i++) {
-      let cardEl = new MovieCard(cardsData[i]).getElement();
-      render(this._moviesContainerComponent, cardEl, BEFORE_END);
-      cardEl.querySelector(`.film-card img`).addEventListener(`click`, openPopupCardHandler);
-      cardEl.querySelector(`.film-card__comments`).addEventListener(`click`, openPopupCardHandler);
-      cardEl.querySelector(`.film-card__title`).addEventListener(`click`, openPopupCardHandler);
-    }
   }
-
 
   _clearCards() {
     this._moviesContainerComponent.getElement().innerHTML = ``;
@@ -95,7 +79,7 @@ export default class MovieList {
 
   _handleShowMoreButtonClick() {
     const quantity = this._mainContainer.querySelectorAll(`.film-card`).length;
-    this._renderCards(this._movieCards.slice(quantity, this._MOVIES_CARD_COUNT + quantity));
+    this._renderCards(quantity, this._MOVIES_CARD_COUNT + quantity);
     if (this._MOVIES_CARD_COUNT + quantity >= this._movieCards.length) {
       document.querySelector(`.films-list__show-more`).style.display = `none`;
     }
@@ -122,12 +106,28 @@ export default class MovieList {
     this._sortComponent.setActiveSortButton(sortType);
     this._sortMovies(sortType);
     this._clearCards();
-    this._renderCards(this._movieCards.slice(0, this._MOVIES_CARD_COUNT));
+    this._renderCards(0, this._MOVIES_CARD_COUNT);
     this._showMoreButtonComponent.activate();
   }
+
   _renderSort() {
     render(this._mainContainer, this._sortComponent, BEFORE_END);
     this._sortComponent.setSortTypeChangeHandler(this._handleSortTypeChange);
+  }
+
+  _handlePopup(card) {
+    this._cardPresenter[card.id].openPopupCard();
+  }
+
+  _handleCardChange(updatedCard) {
+    this._movieCards = updateItem(this._movieCards, updatedCard);
+    this._sourcedMovieCards = updateItem(this._sourcedMovieCards, updatedCard);
+    this._cardPresenter[updatedCard.id].init(updatedCard);
+  }
+
+  _handleChangeMode() {
+    Object
+      .values(this._cardPresenter).forEach((presenter) => presenter.resetView());
   }
 
 

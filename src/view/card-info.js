@@ -1,12 +1,12 @@
 import {
-  render
+  render,
 } from "./utils/render.js";
 
-import AbstractView from "./abstract.js";
+import SmartView from "./smart";
 
 import Comment from "./comment";
 import {
-  AFTER_BEGIN
+  AFTER_BEGIN,
 } from "../main.js";
 
 const createGenreTemplate = (genre) => {
@@ -15,7 +15,7 @@ const createGenreTemplate = (genre) => {
   );
 };
 
-const createMovieInfoTemplate = (card) => {
+const createMovieInfoTemplate = (card, isEmoji, emoji) => {
   const {
     cover,
     name,
@@ -45,6 +45,12 @@ const createMovieInfoTemplate = (card) => {
 
   let genreTitle = genre.length > 1 ? `Genres` : `Genre`;
 
+  const emojiImg = {
+    "emoji-smile": `<img src="./images/emoji/smile.png" width="55" height="55" alt="emoji-smile">`,
+    "emoji-sleeping": `<img src="./images/emoji/sleeping.png" width="55" height="55" alt="emoji"></img>`,
+    "emoji-puke": `<img src="./images/emoji/puke.png" width="55" height="55" alt="emoji"></img>`,
+    "emoji-angry": `<img src="./images/emoji/angry.png" width="55" height="55" alt="emoji"></img>`
+  };
   return (
     `<section class="film-details">
       <form class="film-details__inner" action="" method="get">
@@ -128,7 +134,7 @@ const createMovieInfoTemplate = (card) => {
             <ul class="film-details__comments-list">
             </ul>
             <div class="film-details__new-comment">
-              <div for="add-emoji" class="film-details__add-emoji-label"></div>
+              <div for="add-emoji" class="film-details__add-emoji-label">${isEmoji ? emojiImg[emoji] : ``}</div>
 
               <label class="film-details__comment-label">
                 <textarea class="film-details__comment-input" placeholder="Select reaction below and write comment here" name="comment"></textarea>
@@ -163,21 +169,119 @@ const createMovieInfoTemplate = (card) => {
   );
 };
 
-export default class MovieInfo extends AbstractView {
+export default class CardInfo extends SmartView {
   constructor(card) {
     super();
     this._card = card;
+    this._emoji = {
+      isEmoji: false,
+      emojiImg: null
+    };
     this._element = this.getElement();
     this.renderComments();
+    this._markAsWatchedToggleHandler = this._markAsWatchedToggleHandler.bind(this);
+    this._addToWatchToggleHandler = this._addToWatchToggleHandler.bind(this);
+    this._favoriteToggleHandler = this._favoriteToggleHandler.bind(this);
+    this._closeByEscHandler = this._closeByEscHandler.bind(this);
+    this._closeByClickHandler = this._closeByClickHandler.bind(this);
+    this._addEmojiHandler = this._addEmojiHandler.bind(this);
+
+    this._enableAddEmojiHandler();
   }
 
   getTemplate() {
-    return createMovieInfoTemplate(this._card);
+    return createMovieInfoTemplate(this._card, this._emoji.isEmoji, this._emoji.emojiImg);
   }
 
   renderComments() {
     for (let i = 0; i < this._card.comments.length; i++) {
       render(this._element.querySelector(`.film-details__comments-list`), new Comment(this._card.comments[i]).getElement(), AFTER_BEGIN);
     }
+  }
+  _closeByEscHandler(evt) {
+    if (evt.key === `Escape`) {
+      evt.preventDefault();
+      this._callback._closeByEsc();
+    }
+  }
+  _closeByClickHandler(evt) {
+    evt.preventDefault();
+    this._callback._closeByClick();
+
+  }
+  _addToWatchToggleHandler(evt) {
+    evt.preventDefault();
+    this._callback.addToWatch();
+  }
+
+  _markAsWatchedToggleHandler(evt) {
+    evt.preventDefault();
+    this._callback.markAsWatched();
+  }
+
+  _favoriteToggleHandler(evt) {
+    evt.preventDefault();
+    this._callback.addToFavorite();
+  }
+
+  setFavoriteToggleHandler(callback) {
+    this._callback.addToFavorite = callback;
+    this.getElement().querySelector(`.film-details__control-label--favorite`).addEventListener(`click`, this._favoriteToggleHandler);
+  }
+
+  setMarkAsWatchedToggleHandler(callback) {
+    this._callback.markAsWatched = callback;
+    this.getElement().querySelector(`.film-details__control-label--watched`).addEventListener(`click`, this._markAsWatchedToggleHandler);
+  }
+
+  setAddToWatchToggleHandler(callback) {
+    this._callback.addToWatch = callback;
+    this.getElement().querySelector(`.film-details__control-label--watchlist`).addEventListener(`click`, this._addToWatchToggleHandler);
+  }
+
+  setCloseByClickHandler(callback) {
+    this._callback._closeByClick = callback;
+    this.getElement().querySelector(`.film-details__close-btn`).addEventListener(`click`, this._closeByClickHandler);
+  }
+
+  setCloseByEscHandler(callback) {
+    this._callback._closeByEsc = callback;
+    document.addEventListener(`keydown`, this._closeByEscHandler);
+  }
+
+  restoreHandlers() {
+    this.setFavoriteToggleHandler(this._callback.addToFavorite);
+    this.setMarkAsWatchedToggleHandler(this._callback.markAsWatched);
+    this.setAddToWatchToggleHandler(this._callback.addToWatch);
+    this.setCloseByClickHandler(this._callback._closeByClick);
+    this._enableAddEmojiHandler();
+  }
+
+  _addEmojiHandler(evt) {
+    evt.preventDefault();
+    this._emoji.emojiImg = evt.target.tagName === `IMG` ? evt.target.parentNode.htmlFor : evt.target.htmlFor;
+    this._emoji.isEmoji = true;
+    this.updateElement();
+    this.renderComments();
+    document.querySelector(`#${this._emoji.emojiImg}`).value = this._emoji.emojiImg;
+  }
+
+  _enableAddEmojiHandler() {
+    this.getElement().querySelectorAll(`.film-details__emoji-label`).forEach((item) => {
+      item.addEventListener(`click`, this._addEmojiHandler);
+    });
+  }
+
+  reset() {
+    this._emoji = {
+      isEmoji: false,
+      emojiImg: null
+    };
+    this.updateElement();
+    this.renderComments();
+  }
+
+  removeCloseByEscHandler() {
+    document.removeEventListener(`keydown`, this._closeByEscHandler);
   }
 }
